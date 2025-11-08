@@ -44,25 +44,27 @@ const Calendar: React.FC<CalendarProps> = ({ workouts, onToggleWorkout }) => {
   const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   return (
-    <div className="w-full h-full flex flex-col">
+    <div className="w-full max-w-4xl mx-auto flex flex-col">
       {/* Calendar Header */}
       <div className="flex items-center justify-between mb-12 px-1">
         <button
           onClick={handlePreviousMonth}
-          className="p-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-white/5 smooth-transition text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white active:scale-95"
+          className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-white/5 smooth-transition text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white active:scale-95 focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 active:outline-none"
           aria-label="Previous month"
+          style={{ outline: 'none' }}
         >
           <HiChevronLeft className="w-5 h-5" />
         </button>
 
-        <h2 className="text-3xl font-light text-gray-900 dark:text-white tracking-tight">
+        <h2 className="text-3xl font-semibold text-gray-900 dark:text-white tracking-tight">
           {format(currentDate, 'MMMM yyyy')}
         </h2>
 
         <button
           onClick={handleNextMonth}
-          className="p-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-white/5 smooth-transition text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white active:scale-95"
+          className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-white/5 smooth-transition text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white active:scale-95 focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 active:outline-none"
           aria-label="Next month"
+          style={{ outline: 'none' }}
         >
           <HiChevronRight className="w-5 h-5" />
         </button>
@@ -73,7 +75,7 @@ const Calendar: React.FC<CalendarProps> = ({ workouts, onToggleWorkout }) => {
         {weekDays.map((day) => (
           <div
             key={day}
-            className="text-center text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider py-2"
+            className="text-center text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest"
           >
             {day}
           </div>
@@ -81,7 +83,7 @@ const Calendar: React.FC<CalendarProps> = ({ workouts, onToggleWorkout }) => {
       </div>
 
       {/* Calendar Grid */}
-      <div className="grid grid-cols-7 gap-3 auto-rows-fr">
+      <div className="grid grid-cols-7 gap-3">
         {days.map((day, idx) => {
           const dateString = format(day, 'yyyy-MM-dd');
           const workedOut = workouts.get(dateString) || false;
@@ -89,47 +91,66 @@ const Calendar: React.FC<CalendarProps> = ({ workouts, onToggleWorkout }) => {
           const isTodayDate = isToday(day);
 
           return (
-            <button
+              <button
               key={idx}
               onClick={() => handleDayClick(day)}
               className={`
-                min-h-[60px] rounded-2xl smooth-transition
+                aspect-square rounded-2xl smooth-transition
                 flex flex-col items-center justify-center
                 relative
+                p-3
+                focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 active:outline-none
                 ${
                   !isCurrentMonth
-                    ? 'text-gray-300 dark:text-gray-700 cursor-not-allowed opacity-30 dark:opacity-20'
-                    : 'text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-white/5 cursor-pointer active:scale-95'
-                }
-                ${
-                  workedOut
-                    ? 'bg-primary-500 dark:bg-primary-600 text-white hover:bg-primary-600 dark:hover:bg-primary-700 shadow-sm'
-                    : ''
-                }
-                ${
-                  isTodayDate && !workedOut
-                    ? 'ring-2 ring-primary-400 dark:ring-primary-500 ring-offset-0 bg-primary-50/50 dark:bg-white/5'
-                    : ''
-                }
-                ${
-                  isTodayDate && workedOut
-                    ? 'ring-2 ring-primary-300 dark:ring-primary-400 ring-offset-0'
-                    : ''
+                    ? 'text-gray-300 dark:text-gray-700 cursor-not-allowed opacity-15 dark:opacity-10 bg-transparent'
+                    : workedOut
+                    ? 'bg-gradient-to-br from-success-500 to-success-600 dark:from-success-600 dark:to-success-700 shadow-lg shadow-success-500/25 dark:shadow-success-900/40 hover:shadow-xl hover:shadow-success-500/35 dark:hover:shadow-success-900/50 hover:scale-105 cursor-pointer'
+                    : isTodayDate
+                    ? 'bg-gray-50 dark:bg-zinc-900/80 border-2 border-gray-900 dark:border-gray-200 hover:border-gray-700 dark:hover:border-gray-300 hover:scale-[1.02] cursor-pointer shadow-sm dark:shadow-gray-950/30'
+                    : 'bg-gray-50/50 dark:bg-zinc-950 border border-gray-200/50 dark:border-white/10 hover:border-gray-300 dark:hover:border-zinc-700 hover:shadow-lg hover:scale-105 cursor-pointer'
                 }
               `}
               disabled={!isCurrentMonth}
+              style={{ outline: 'none' }}
             >
+              {/* Date number */}
               <span
                 className={`
-                  text-base font-medium
-                  ${workedOut ? 'text-white' : 'text-gray-900 dark:text-white'}
-                  ${!isCurrentMonth ? 'opacity-40 dark:opacity-30' : ''}
+                  text-2xl transition-all tracking-tight
+                  ${workedOut ? 'text-white font-semibold' : ''}
+                  ${!workedOut && isTodayDate ? 'text-gray-900 dark:text-white font-bold text-[26px] leading-none' : ''}
+                  ${!workedOut && !isTodayDate ? 'text-gray-800 dark:text-gray-100 font-medium' : ''}
+                  ${!isCurrentMonth ? 'opacity-30' : ''}
                 `}
               >
                 {format(day, 'd')}
               </span>
+              
+              {/* Check icon for completed days */}
               {workedOut && (
-                <HiCheck className="w-4 h-4 mt-0.5 text-white" />
+                <div className="absolute bottom-2 right-2">
+                  <div className="w-6 h-6 rounded-full bg-white/25 backdrop-blur-sm flex items-center justify-center shadow-sm">
+                    <HiCheck className="w-4 h-4 text-white stroke-[3]" />
+                  </div>
+                </div>
+              )}
+
+              {/* Today label (when not worked out) */}
+              {isTodayDate && !workedOut && (
+                <div className="absolute bottom-2.5 left-0 right-0 flex justify-center z-10">
+                  <div className="px-1 py-0.5 rounded bg-gray-900 dark:bg-gray-100 inline-flex items-center h-auto">
+                    <span className="text-[10px] font-bold text-white dark:text-gray-900 uppercase tracking-[0.05em] leading-[1]" style={{ lineHeight: '1' }}>Today</span>
+                  </div>
+                </div>
+              )}
+              
+              {/* Today label for completed day */}
+              {isTodayDate && workedOut && (
+                <div className="absolute top-2 left-2">
+                  <div className="px-1.5 py-0.5 rounded-md bg-white/25 backdrop-blur-sm shadow-sm">
+                    <span className="text-[9px] font-bold text-white uppercase tracking-[0.05em] leading-none">Today</span>
+                  </div>
+                </div>
               )}
             </button>
           );

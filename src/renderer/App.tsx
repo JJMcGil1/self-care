@@ -75,7 +75,7 @@ function App() {
           className="flex-1 overflow-y-auto"
           style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
         >
-          <div className="h-full max-w-5xl mx-auto px-12 py-16">
+          <div className="h-full flex items-center justify-center px-8 py-12">
             <Calendar workouts={workouts} onToggleWorkout={toggleWorkout} />
           </div>
         </div>
