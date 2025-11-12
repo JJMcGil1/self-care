@@ -1,32 +1,32 @@
 import React, { useState, useMemo } from 'react';
-import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth, isToday, addMonths, subMonths } from 'date-fns';
+import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth, isToday, addMonths, subMonths, isFuture, startOfDay, isSameYear, getDay } from 'date-fns';
 import { HiChevronLeft, HiChevronRight } from 'react-icons/hi';
 import { HiCheck } from 'react-icons/hi2';
 
 interface CalendarProps {
   workouts: Map<string, boolean>;
+  weights: Map<string, number>;
   onToggleWorkout: (date: string) => void;
 }
 
-const Calendar: React.FC<CalendarProps> = ({ workouts, onToggleWorkout }) => {
+const Calendar: React.FC<CalendarProps> = ({ workouts, weights, onToggleWorkout }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
 
   const monthStart = startOfMonth(currentDate);
-  const monthEnd = endOfMonth(currentDate);
   const calendarStart = startOfWeek(monthStart, { weekStartsOn: 0 });
-  const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 0 });
 
   const days = useMemo(() => {
     const daysArray = [];
     let day = calendarStart;
+    const targetEnd = addDays(calendarStart, 41); // Always 6 weeks (42 days)
 
-    while (day <= calendarEnd) {
+    while (day <= targetEnd) {
       daysArray.push(day);
       day = addDays(day, 1);
     }
 
     return daysArray;
-  }, [calendarStart, calendarEnd]);
+  }, [calendarStart]);
 
   const handlePreviousMonth = () => {
     setCurrentDate(subMonths(currentDate, 1));
@@ -36,7 +36,19 @@ const Calendar: React.FC<CalendarProps> = ({ workouts, onToggleWorkout }) => {
     setCurrentDate(addMonths(currentDate, 1));
   };
 
+  const handleGoToToday = () => {
+    setCurrentDate(new Date());
+  };
+
+  // Check if we're viewing the current month
+  const today = new Date();
+  const isCurrentMonth = isSameMonth(currentDate, today) && isSameYear(currentDate, today);
+
   const handleDayClick = (date: Date) => {
+    // Don't allow clicking on future dates or days from other months
+    if (isFuture(startOfDay(date)) || !isSameMonth(date, currentDate)) {
+      return;
+    }
     const dateString = format(date, 'yyyy-MM-dd');
     onToggleWorkout(dateString);
   };
@@ -45,50 +57,81 @@ const Calendar: React.FC<CalendarProps> = ({ workouts, onToggleWorkout }) => {
 
   return (
     <div className="w-full max-w-4xl mx-auto flex flex-col">
-      {/* Calendar Header */}
-      <div className="flex items-center justify-between mb-12 px-1">
+      {/* Calendar Header - Sticky */}
+      <div className="sticky top-0 z-10 flex items-center justify-between mb-12 px-1 bg-white dark:bg-black py-4">
         <button
           onClick={handlePreviousMonth}
-          className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-white/5 smooth-transition text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white active:scale-95 focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 active:outline-none"
+          className="p-3 rounded-2xl hover:bg-gray-100 dark:hover:bg-white/10 smooth-transition text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white active:scale-[0.96] focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 active:outline-none flex items-center justify-center"
           aria-label="Previous month"
           style={{ outline: 'none' }}
         >
-          <HiChevronLeft className="w-5 h-5" />
+          <HiChevronLeft className="w-6 h-6 stroke-[1.5]" />
         </button>
 
-        <h2 className="text-3xl font-semibold text-gray-900 dark:text-white tracking-tight">
-          {format(currentDate, 'MMMM yyyy')}
-        </h2>
+        <div className="flex items-center gap-3">
+          <h2 
+            key={`month-${format(currentDate, 'yyyy-MM')}`}
+            className="text-3xl font-semibold text-gray-900 dark:text-white tracking-tight fade-in"
+          >
+            {format(currentDate, 'MMMM yyyy')}
+          </h2>
+          
+          {!isCurrentMonth && (
+            <button
+              onClick={handleGoToToday}
+              className="px-3 py-1.5 rounded-xl hover:bg-gray-100 dark:hover:bg-white/10 smooth-transition text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white active:scale-[0.96] focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 active:outline-none"
+              aria-label="Go to today"
+              style={{ outline: 'none' }}
+            >
+              Today
+            </button>
+          )}
+        </div>
 
         <button
           onClick={handleNextMonth}
-          className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-white/5 smooth-transition text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white active:scale-95 focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 active:outline-none"
+          className="p-3 rounded-2xl hover:bg-gray-100 dark:hover:bg-white/10 smooth-transition text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white active:scale-[0.96] focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 active:outline-none flex items-center justify-center"
           aria-label="Next month"
           style={{ outline: 'none' }}
         >
-          <HiChevronRight className="w-5 h-5" />
+          <HiChevronRight className="w-6 h-6 stroke-[1.5]" />
         </button>
       </div>
 
-      {/* Week Day Headers */}
-      <div className="grid grid-cols-7 gap-3 mb-4">
-        {weekDays.map((day) => (
-          <div
-            key={day}
-            className="text-center text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest"
-          >
-            {day}
+      {/* Calendar Content Container */}
+      <div className="relative" style={{ minHeight: '520px', width: '100%' }}>
+        <div
+          key={`calendar-${format(currentDate, 'yyyy-MM')}`}
+          className="fade-in"
+          style={{ width: '100%' }}
+        >
+          {/* Week Day Headers */}
+          <div className="grid grid-cols-7 gap-3 mb-4">
+            {weekDays.map((day) => (
+              <div
+                key={day}
+                className="text-center text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest"
+              >
+                {day}
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
 
-      {/* Calendar Grid */}
-      <div className="grid grid-cols-7 gap-3">
+          {/* Calendar Grid */}
+          <div className="grid grid-cols-7 grid-rows-6 gap-3" style={{ minHeight: '480px' }}>
         {days.map((day, idx) => {
           const dateString = format(day, 'yyyy-MM-dd');
           const workedOut = workouts.get(dateString) || false;
+          const weight = weights.get(dateString);
           const isCurrentMonth = isSameMonth(day, currentDate);
           const isTodayDate = isToday(day);
+          const isFutureDate = isFuture(startOfDay(day));
+          const isMonday = getDay(day) === 1; // 0 = Sunday, 1 = Monday
+          
+          // Debug logging for weight badge visibility
+          if (isMonday && workedOut && isCurrentMonth) {
+            console.log(`[Calendar] Monday ${dateString}: workedOut=${workedOut}, weight=${weight}, shouldShow=${weight !== undefined}`);
+          }
 
           return (
               <button
@@ -102,25 +145,28 @@ const Calendar: React.FC<CalendarProps> = ({ workouts, onToggleWorkout }) => {
                 focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 active:outline-none
                 ${
                   !isCurrentMonth
-                    ? 'text-gray-300 dark:text-gray-700 cursor-not-allowed opacity-15 dark:opacity-10 bg-transparent'
+                    ? 'text-gray-300 dark:text-gray-500 cursor-not-allowed opacity-40 dark:opacity-40 bg-transparent'
+                    : isFutureDate
+                    ? 'bg-gray-50/30 dark:bg-zinc-950/50 border border-gray-200/30 dark:border-white/5 cursor-not-allowed opacity-50'
                     : workedOut
-                    ? 'bg-gradient-to-br from-success-500 to-success-600 dark:from-success-600 dark:to-success-700 shadow-lg shadow-success-500/25 dark:shadow-success-900/40 hover:shadow-xl hover:shadow-success-500/35 dark:hover:shadow-success-900/50 hover:scale-105 cursor-pointer'
+                    ? 'bg-success-50/60 dark:bg-success-800/15 border border-success-400 dark:border-success-500 hover:border-success-500 dark:hover:border-success-400 hover:scale-[1.02] cursor-pointer'
                     : isTodayDate
                     ? 'bg-gray-50 dark:bg-zinc-900/80 border-2 border-gray-900 dark:border-gray-200 hover:border-gray-700 dark:hover:border-gray-300 hover:scale-[1.02] cursor-pointer shadow-sm dark:shadow-gray-950/30'
                     : 'bg-gray-50/50 dark:bg-zinc-950 border border-gray-200/50 dark:border-white/10 hover:border-gray-300 dark:hover:border-zinc-700 hover:shadow-lg hover:scale-105 cursor-pointer'
                 }
               `}
-              disabled={!isCurrentMonth}
+              disabled={!isCurrentMonth || isFutureDate}
               style={{ outline: 'none' }}
             >
               {/* Date number */}
               <span
                 className={`
                   text-2xl transition-all tracking-tight
-                  ${workedOut ? 'text-white font-semibold' : ''}
-                  ${!workedOut && isTodayDate ? 'text-gray-900 dark:text-white font-bold text-[26px] leading-none' : ''}
-                  ${!workedOut && !isTodayDate ? 'text-gray-800 dark:text-gray-100 font-medium' : ''}
-                  ${!isCurrentMonth ? 'opacity-30' : ''}
+                  ${isFutureDate ? 'text-gray-400 dark:text-gray-600 font-medium' : ''}
+                  ${!isFutureDate && workedOut ? 'text-gray-800 dark:text-gray-100 font-medium' : ''}
+                  ${!isFutureDate && !workedOut && isTodayDate ? 'text-gray-900 dark:text-white font-bold text-[26px] leading-none' : ''}
+                  ${!isFutureDate && !workedOut && !isTodayDate ? 'text-gray-800 dark:text-gray-100 font-medium' : ''}
+                  ${!isCurrentMonth ? 'text-gray-400 dark:text-gray-500' : ''}
                 `}
               >
                 {format(day, 'd')}
@@ -129,8 +175,28 @@ const Calendar: React.FC<CalendarProps> = ({ workouts, onToggleWorkout }) => {
               {/* Check icon for completed days */}
               {workedOut && (
                 <div className="absolute bottom-2 right-2">
-                  <div className="w-6 h-6 rounded-full bg-white/25 backdrop-blur-sm flex items-center justify-center shadow-sm">
-                    <HiCheck className="w-4 h-4 text-white stroke-[3]" />
+                  <div className="w-4 h-4 rounded-full bg-success-500 dark:bg-success-400 flex items-center justify-center">
+                    <HiCheck className="w-2.5 h-2.5 text-white stroke-[2]" />
+                  </div>
+                </div>
+              )}
+
+              {/* Today label for completed day */}
+              {isTodayDate && workedOut && (
+                <div className="absolute top-2 left-2 z-20">
+                  <div className="px-1 py-0.5 rounded bg-success-500 dark:bg-success-400 inline-flex items-center h-auto">
+                    <span className="text-[10px] font-bold text-white uppercase tracking-[0.05em] leading-[1]" style={{ lineHeight: '1' }}>Today</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Weight display for Mondays - only show when workout is checked off */}
+              {isMonday && weight !== undefined && workedOut && (
+                <div className="absolute bottom-2 left-2 z-10">
+                  <div className="px-1.5 py-0.5 rounded-md bg-primary-50 dark:bg-primary-900/40 border border-primary-200/60 dark:border-primary-700/40 inline-flex items-center shadow-sm">
+                    <span className="text-[9px] font-medium text-primary-700 dark:text-primary-300 leading-[1]" style={{ lineHeight: '1' }}>
+                      {weight.toFixed(1)} lbs
+                    </span>
                   </div>
                 </div>
               )}
@@ -143,18 +209,11 @@ const Calendar: React.FC<CalendarProps> = ({ workouts, onToggleWorkout }) => {
                   </div>
                 </div>
               )}
-              
-              {/* Today label for completed day */}
-              {isTodayDate && workedOut && (
-                <div className="absolute top-2 left-2">
-                  <div className="px-1.5 py-0.5 rounded-md bg-white/25 backdrop-blur-sm shadow-sm">
-                    <span className="text-[9px] font-bold text-white uppercase tracking-[0.05em] leading-none">Today</span>
-                  </div>
-                </div>
-              )}
             </button>
           );
         })}
+          </div>
+        </div>
       </div>
 
     </div>

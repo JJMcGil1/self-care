@@ -5,8 +5,8 @@ const electronAPI = {
   getWorkout: (date: string): Promise<WorkoutRecord | null> =>
     ipcRenderer.invoke('get-workout', date),
 
-  setWorkout: (date: string, workedOut: boolean): Promise<WorkoutRecord> =>
-    ipcRenderer.invoke('set-workout', date, workedOut),
+  setWorkout: (date: string, workedOut: boolean, weight?: number): Promise<WorkoutRecord> =>
+    ipcRenderer.invoke('set-workout', date, workedOut, weight),
 
   getWorkoutsInRange: (startDate: string, endDate: string): Promise<WorkoutRecord[]> =>
     ipcRenderer.invoke('get-workouts-in-range', startDate, endDate),

@@ -81,8 +81,8 @@ ipcMain.handle('get-workout', async (_event, date: string): Promise<WorkoutRecor
   return workoutDb.getWorkout(date);
 });
 
-ipcMain.handle('set-workout', async (_event, date: string, workedOut: boolean): Promise<WorkoutRecord> => {
-  return workoutDb.setWorkout(date, workedOut);
+ipcMain.handle('set-workout', async (_event, date: string, workedOut: boolean, weight?: number): Promise<WorkoutRecord> => {
+  return workoutDb.setWorkout(date, workedOut, weight);
 });
 
 ipcMain.handle('get-workouts-in-range', async (_event, startDate: string, endDate: string): Promise<WorkoutRecord[]> => {
